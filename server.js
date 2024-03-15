@@ -55,8 +55,17 @@ app.use(
 // Connect-flash for flash messages
 app.use(flash());
 
-// CSRF protection
-app.use(csurf());
+// CSRF protection with route specific disabling for API routes
+const csrfProtection = csurf();
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    // Exclude API routes from CSRF protection
+    next();
+  } else {
+    // Apply CSRF protection to non-API routes
+    csrfProtection(req, res, next);
+  }
+});
 
 app.use((err, req, res, next) => {
   if (err.code !== 'EBADCSRFTOKEN') return next(err);
@@ -75,7 +84,10 @@ app.use((req, res, next) => {
   const sess = req.session;
   // Make session available to all views
   res.locals.session = sess;
-  res.locals.csrfToken = req.csrfToken(); // Pass CSRF token to all views
+  if (!req.path.startsWith('/api/')) {
+    // Pass CSRF token to non-API routes
+    res.locals.csrfToken = req.csrfToken(); 
+  }
   res.locals.flashMessages = req.flash(); // Pass flash messages to all views
   if (!sess.views) {
     sess.views = 1;

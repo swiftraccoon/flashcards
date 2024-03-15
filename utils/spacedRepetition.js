@@ -1,43 +1,51 @@
 // spacedRepetition.js
 
 /**
- * Calculates the next presentation timestamp for a flashcard based on user's interaction data
- * and updates the flashcard's spaced repetition metrics.
- * @param {Object} interactionData - User interaction data with the flashcard.
- * @param {Object} currentMetrics - Current spaced repetition metrics of the flashcard.
- * @returns {Object} Updated metrics including next presentation timestamp.
+ * Updates the spaced repetition metrics for a flashcard based on user interaction.
+ * @param {Object} interactionData - The data from the user's interaction with the flashcard.
+ * @param {Date} interactionData.timestamp - The timestamp of the interaction.
+ * @param {boolean} interactionData.responseCorrectness - Whether the response was correct.
+ * @param {number} interactionData.consecutiveCorrectResponses - The number of consecutive correct responses.
+ * @param {number} interactionData.responseTime - The response time in milliseconds.
+ * @param {number} interactionData.confidenceLevel - The user's reported confidence level (1-5).
+ * @param {number} interactionData.difficultyRating - The difficulty rating of the flashcard (1-5).
+ * @param {string} interactionData.sessionContext - A string representing the context of the study session.
+ * @param {Object} currentMetrics - The current metrics for the flashcard.
+ * @returns {Object} The updated metrics object.
  */
-const updateMetrics = (interactionData, currentMetrics) => {
-  const { responseCorrectness, responseTime } = interactionData;
-
-  // Example logic for updating metrics based on user's response correctness and response time
-  let { consecutiveCorrectResponses, difficultyRating, sessionContext } = currentMetrics;
-
-  if (responseCorrectness) {
-    consecutiveCorrectResponses += 1;
-    difficultyRating = Math.max(1, difficultyRating - 1);
-  } else {
-    consecutiveCorrectResponses = 0;
-    difficultyRating = Math.min(5, difficultyRating + 1);
-  }
-
-  // Example calculation for next presentation timestamp based on difficulty rating
-  const nextPresentationDelayHours = Math.pow(2, difficultyRating) * 4;
-  const nextPresentationTimestamp = new Date();
-  nextPresentationTimestamp.setHours(nextPresentationTimestamp.getHours() + nextPresentationDelayHours);
-
-  // Update session context or other metrics as needed
-  sessionContext = `Updated on ${new Date().toISOString()}`;
-
-  console.log(`Spaced Repetition Metrics Updated: Next presentation at ${nextPresentationTimestamp}, Difficulty Rating: ${difficultyRating}`);
-
-  return {
-    ...currentMetrics,
+function calculateAndUpdateMetrics(interactionData, currentMetrics) {
+  // Destructure the interaction data
+  const {
+    timestamp,
+    responseCorrectness,
     consecutiveCorrectResponses,
+    responseTime,
+    confidenceLevel,
     difficultyRating,
     sessionContext,
-    nextPresentationTimestamp, // Assuming this field is added to the metrics to track when to present the flashcard next
-  };
-};
+  } = interactionData;
 
-module.exports = { updateMetrics };
+  // Update metrics based on interaction data
+  let updatedMetrics = {
+    ...currentMetrics,
+    timestamp,
+    responseCorrectness,
+    consecutiveCorrectResponses: responseCorrectness ? consecutiveCorrectResponses + 1 : 0,
+    responseTime,
+    confidenceLevel,
+    difficultyRating: responseCorrectness ? Math.max(1, difficultyRating - 1) : Math.min(5, difficultyRating + 1),
+    sessionContext,
+  };
+
+  // Example of adjusting the next presentation timestamp based on difficulty rating
+  const nextPresentationDelayHours = Math.pow(2, updatedMetrics.difficultyRating) * 4;
+  const nextPresentationTimestamp = new Date(timestamp);
+  nextPresentationTimestamp.setHours(nextPresentationTimestamp.getHours() + nextPresentationDelayHours);
+  updatedMetrics.nextPresentationTimestamp = nextPresentationTimestamp;
+
+  console.log(`Spaced Repetition Metrics Updated: Next presentation at ${nextPresentationTimestamp}, Difficulty Rating: ${updatedMetrics.difficultyRating}`);
+
+  return updatedMetrics;
+}
+
+module.exports = { calculateAndUpdateMetrics };

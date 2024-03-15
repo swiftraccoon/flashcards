@@ -2,7 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const Flashcard = require('../models/Flashcard');
 const { isAuthenticated } = require('./middleware/authMiddleware');
-const { updateMetrics } = require('../utils/spacedRepetition');
+const { calculateAndUpdateMetrics } = require('../utils/spacedRepetition');
 const router = express.Router();
 
 // POST /api/flashcards - Create a new flashcard
@@ -84,7 +84,7 @@ router.get('/api/flashcards', isAuthenticated, async (req, res) => {
 router.post('/api/flashcards/:id/interact', isAuthenticated, async (req, res) => {
   try {
     const { id } = req.params;
-    const { responseCorrectness, responseTime } = req.body;
+    const { responseCorrectness, responseTime, confidenceLevel } = req.body;
 
     let flashcard = await Flashcard.findById(id);
 
@@ -93,13 +93,24 @@ router.post('/api/flashcards/:id/interact', isAuthenticated, async (req, res) =>
       return res.status(404).json({ error: 'Flashcard not found' });
     }
 
-    const updatedMetrics = updateMetrics({ responseCorrectness, responseTime }, flashcard.metrics);
+    // Extract current metrics from the flashcard
+    const currentMetrics = flashcard.metrics;
+    // Call the calculateAndUpdateMetrics function to get updated metrics
+    const updatedMetrics = calculateAndUpdateMetrics({
+      timestamp: new Date(),
+      responseCorrectness,
+      consecutiveCorrectResponses: currentMetrics.consecutiveCorrectResponses,
+      responseTime,
+      confidenceLevel,
+      difficultyRating: currentMetrics.difficultyRating,
+      sessionContext: '' // This can be expanded based on additional context if needed
+    }, currentMetrics);
 
     flashcard.metrics = updatedMetrics;
     await flashcard.save();
     
     console.log(`Flashcard metrics updated successfully for ID: ${flashcard.id}`);
-    res.json({ message: 'Flashcard metrics updated successfully', flashcard });
+    res.json({ message: 'Flashcard interaction recorded successfully', correct: responseCorrectness });
   } catch (error) {
     console.error(`Error updating flashcard metrics: ${error.message}`, error.stack);
     res.status(500).json({ error: 'Internal server error' });
