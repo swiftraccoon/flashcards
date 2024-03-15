@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/_head.ejs') %>
+  <body>
+<%- include('partials/_header.ejs') %>
+    <main role="main" class="container mt-4">
+      <div class="text-center">
+        <h1>flashcards</h1>
+        <p>Welcome to the flashcard app, your interactive learning tool.</p>
+        <% if(flashMessages.error) { %>
+        <div class="alert alert-danger" role="alert">
+          <%= flashMessages.error %>
+        </div>
+        <% } %>
+        <% if(flashMessages.success) { %>
+        <div class="alert alert-success" role="alert">
+          <%= flashMessages.success %>
+        </div>
+        <% } %>
+        <% if (session && session.userId) { %>
+          <a href="/flashcards" class="btn btn-primary">Start Learning</a>
+        <% } else { %>
+          <a href="/auth/login" class="btn btn-primary">Login to Start</a>
+        <% } %>
+      </div>
+    </main>
+  </body>
+<%- include('partials/_footer.ejs') %>
+  <script src="/js/main.js"></script>
+</html>

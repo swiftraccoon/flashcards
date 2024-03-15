@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/_head.ejs') %>
+<body>
+<%- include('partials/_header.ejs') %>
+<main role="main" class="container mt-4">
+  <div id="flashcard-container" class="card">
+    <div class="card-header">
+      Flashcard Question
+    </div>
+    <div class="card-body">
+      <h5 class="card-title" id="flashcard-question">Question will appear here</h5>
+      <div id="flashcard-options" class="mb-3">
+        <!-- Options will be populated here -->
+      </div>
+      <button id="next-flashcard" class="btn btn-primary">Next Question</button>
+    </div>
+  </div>
+</main>
+<script src="/js/flashcards.js"></script>
+</body>
+<%- include('partials/_footer.ejs') %>
+</html>

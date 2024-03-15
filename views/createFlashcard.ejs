@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/_head.ejs') %>
+<body>
+<%- include('partials/_header.ejs') %>
+<main role="main" class="container mt-4">
+  <h2>Create New Flashcard</h2>
+  <form action="/admin/flashcards" method="POST">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <div class="mb-3">
+      <label for="question" class="form-label">Question</label>
+      <input type="text" class="form-control" id="question" name="question" required>
+    </div>
+    <div class="mb-3">
+      <label for="options" class="form-label">Options (separate with commas)</label>
+      <input type="text" class="form-control" id="options" name="options" required>
+    </div>
+    <div class="mb-3">
+      <label for="correctAnswer" class="form-label">Correct Answer Index</label>
+      <select class="form-control" id="correctAnswer" name="correctAnswer" required>
+        <option value="0">0</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label for="subject" class="form-label">Subject</label>
+      <input type="text" class="form-control" id="subject" name="subject" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Create Flashcard</button>
+  </form>
+</main>
+<script src="/js/main.js"></script>
+<%- include('partials/_footer.ejs') %>
+</body>
+</html>
