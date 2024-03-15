@@ -5,9 +5,13 @@
 <%- include('partials/_header.ejs') %>
 <main role="main" class="container mt-4">
   <h2>User Dashboard</h2>
-  <canvas id="learningProgressChart"></canvas>
+  <canvas id="correctnessChart"></canvas>
+  <canvas id="responseTimeChart"></canvas>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const analyticsData = <%- JSON.stringify(analyticsData) %>;
+</script>
 <script src="/js/dashboard.js"></script>
 </body>
 <%- include('partials/_footer.ejs') %>

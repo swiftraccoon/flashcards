@@ -13,10 +13,10 @@ router.post('/api/analytics', isAuthenticated, async (req, res) => {
     }
     const analyticsData = await Analytics.create({...req.body, userId});
     console.log('Analytics data recorded:', analyticsData);
-    res.status(201).json(analyticsData);
+    res.status(201).json({ message: 'Analytics data recorded successfully', analyticsData });
   } catch (error) {
     console.error('Error recording analytics:', error.message, error.stack);
-    res.status(500).send(error.message);
+    res.status(500).send('Failed to record analytics data');
   }
 });
 
@@ -33,15 +33,20 @@ router.get('/api/analytics', isAuthenticated, async (req, res) => {
     res.json({ analytics });
   } catch (error) {
     console.error('Error fetching analytics:', error.message, error.stack);
-    res.status(500).send(error.message);
+    res.status(500).send('Failed to fetch analytics data');
   }
 });
 
-// New route for the dashboard page
+// Updated route for the dashboard page
 router.get('/dashboard', isAuthenticated, async (req, res) => {
   try {
     const userId = req.session.userId;
-    const analyticsData = await Analytics.find({ userId }).lean();
+    const analytics = await Analytics.find({ userId }).lean();
+    const analyticsData = analytics.map(analytic => ({
+      interactionTimestamp: analytic.interactionTimestamp,
+      correctness: analytic.performanceMetrics.correctness ? 'Correct' : 'Incorrect',
+      responseTime: analytic.performanceMetrics.responseTime
+    }));
     res.render('dashboard', { analyticsData: JSON.stringify(analyticsData) });
   } catch (error) {
     console.error('Error loading dashboard page:', error.message, error.stack);
