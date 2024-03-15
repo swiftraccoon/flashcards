@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function displayFlashcard() {
-        if(flashcards.length === 0) {
+        if (flashcards.length === 0) {
             console.log('No flashcards fetched.');
             return;
         }
@@ -39,28 +39,43 @@ document.addEventListener('DOMContentLoaded', function () {
         const flashcard = flashcards[currentFlashcardIndex];
         const isCorrect = selectedOptionIndex == flashcard.correctAnswer;
 
-        // Removed userId from the request payload as it's now set server-side
-        fetch(`/api/flashcards/${flashcard._id}/interact`, { // Corrected endpoint to match server-side implementation
+        fetch(`/api/flashcards/${flashcard._id}/interact`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                // Assuming the user's token is stored in localStorage after login
-                'Authorization': `Bearer ${localStorage.getItem('token')}` // Ensure the token is sent with the request for authentication
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            body: JSON.stringify({ responseCorrectness: isCorrect, responseTime: 1200 }), // Adjusted to match the expected server-side format
+            body: JSON.stringify({ responseCorrectness: isCorrect, responseTime: 1200 }),
         })
             .then(response => response.json())
             .then(result => {
                 console.log(`Interaction submitted for flashcard ${flashcard._id}:`, result);
-                nextFlashcard();
+                displayFeedback(result.correct, event.target);
+                setTimeout(nextFlashcard, 2000); // Add a delay before moving to the next question
             })
             .catch(error => {
                 console.error('Error submitting interaction:', error.message, error.stack);
             });
     }
 
+    function displayFeedback(isCorrect, selectedButton) {
+        const feedbackMessageElement = document.createElement('div');
+        feedbackMessageElement.classList.add('feedback-message');
+        feedbackMessageElement.textContent = isCorrect ? 'Correct!' : 'Incorrect!';
+        feedbackMessageElement.style.color = isCorrect ? 'green' : 'red';
+
+        const optionsContainer = document.getElementById('flashcard-options');
+        optionsContainer.childNodes.forEach(button => {
+            button.disabled = true; // Disable all options after an answer is selected
+            if (button.dataset.index == selectedButton.dataset.index) {
+                button.style.backgroundColor = isCorrect ? 'lightgreen' : 'lightcoral';
+            }
+        });
+        optionsContainer.appendChild(feedbackMessageElement); // Append the feedback message
+    }
+
     function nextFlashcard() {
-        if(currentFlashcardIndex < flashcards.length - 1) {
+        if (currentFlashcardIndex < flashcards.length - 1) {
             currentFlashcardIndex++;
             displayFlashcard();
         } else {

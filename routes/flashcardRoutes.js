@@ -2,7 +2,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const Flashcard = require('../models/Flashcard');
 const Analytics = require('../models/Analytics');
+const Explanation = require('../models/Explanation'); // Added for explanation model
 const { isAuthenticated } = require('./middleware/authMiddleware');
+const isAdmin = require('./middleware/isAdmin'); // Added for admin check
 const { calculateAndUpdateMetrics } = require('../utils/spacedRepetition');
 const router = express.Router();
 
@@ -128,6 +130,20 @@ router.post('/api/flashcards/:id/interact', isAuthenticated, async (req, res) =>
     res.json({ message: 'Flashcard interaction recorded successfully', correct: responseCorrectness });
   } catch (error) {
     console.error(`Error updating flashcard metrics: ${error.message}`, error.stack);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/flashcards/:id/explanation - Add an explanation to a flashcard
+router.post('/api/flashcards/:id/explanation', isAuthenticated, isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { content } = req.body;
+    const explanation = await Explanation.create({ flashcardId: id, content });
+    console.log(`Explanation added for flashcard ID: ${id}`);
+    res.status(201).json({ message: 'Explanation added successfully', explanation });
+  } catch (error) {
+    console.error(`Error adding explanation: ${error.message}`, error.stack);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
