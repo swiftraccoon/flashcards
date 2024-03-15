@@ -42,12 +42,18 @@ router.get('/dashboard', isAuthenticated, async (req, res) => {
   try {
     const userId = req.session.userId;
     const analytics = await Analytics.find({ userId }).lean();
+    if (!analytics || analytics.length === 0) {
+      console.log(`No analytics data found for user: ${userId}`);
+      res.render('dashboard', { analyticsData: JSON.stringify([]), message: 'No data available' });
+      return;
+    }
     const analyticsData = analytics.map(analytic => ({
       interactionTimestamp: analytic.interactionTimestamp,
       correctness: analytic.performanceMetrics.correctness ? 'Correct' : 'Incorrect',
       responseTime: analytic.performanceMetrics.responseTime
     }));
     res.render('dashboard', { analyticsData: JSON.stringify(analyticsData) });
+    console.log(`Dashboard data prepared for user: ${userId}`);
   } catch (error) {
     console.error('Error loading dashboard page:', error.message, error.stack);
     res.status(500).send('Internal Server Error');

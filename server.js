@@ -124,8 +124,26 @@ app.get("/flashcards", isAuthenticated, (req, res) => {
 });
 
 // Route for dashboard page
-app.get("/dashboard", isAuthenticated, (req, res) => {
-  res.render("dashboard");
+app.get("/dashboard", isAuthenticated, async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const analyticsData = await Analytics.find({ userId }).lean();
+    if (!analyticsData || analyticsData.length === 0) {
+      console.log(`No analytics data found for user: ${userId}`);
+      res.render('dashboard', { analyticsData: JSON.stringify([]), message: 'No data available' });
+      return;
+    }
+    const transformedData = analyticsData.map(analytic => ({
+      interactionTimestamp: analytic.interactionTimestamp,
+      correctness: analytic.performanceMetrics.correctness ? 'Correct' : 'Incorrect',
+      responseTime: analytic.performanceMetrics.responseTime
+    }));
+    res.render('dashboard', { analyticsData: JSON.stringify(transformedData) });
+    console.log(`Dashboard data prepared for user: ${userId}`);
+  } catch (error) {
+    console.error('Error loading dashboard page:', error.message, error.stack);
+    res.status(500).send('Internal Server Error');
+  }
 });
 
 // If no routes handled the request, it's a 404

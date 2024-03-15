@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const Flashcard = require('../models/Flashcard');
+const Analytics = require('../models/Analytics');
 const { isAuthenticated } = require('./middleware/authMiddleware');
 const { calculateAndUpdateMetrics } = require('../utils/spacedRepetition');
 const router = express.Router();
@@ -85,6 +86,7 @@ router.post('/api/flashcards/:id/interact', isAuthenticated, async (req, res) =>
   try {
     const { id } = req.params;
     const { responseCorrectness, responseTime, confidenceLevel } = req.body;
+    const userId = req.session.userId;
 
     let flashcard = await Flashcard.findById(id);
 
@@ -110,6 +112,19 @@ router.post('/api/flashcards/:id/interact', isAuthenticated, async (req, res) =>
     await flashcard.save();
     
     console.log(`Flashcard metrics updated successfully for ID: ${flashcard.id}`);
+    // Record analytics data
+    const analyticsData = {
+      userId,
+      flashcardId: flashcard._id,
+      interactionTimestamp: new Date(),
+      performanceMetrics: {
+        responseTime,
+        correctness: responseCorrectness,
+      }
+    };
+    await Analytics.create(analyticsData);
+    console.log('Analytics data recorded:', analyticsData);
+
     res.json({ message: 'Flashcard interaction recorded successfully', correct: responseCorrectness });
   } catch (error) {
     console.error(`Error updating flashcard metrics: ${error.message}`, error.stack);
